@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">MarsWeather</string>
+    <string name="app_name">Mars Weather</string>
+
+    <string name="error">Unable to retrieve real time data.</string>
 </resources>
