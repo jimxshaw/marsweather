@@ -1,5 +1,8 @@
 package me.jimmyshaw.marsweather;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -9,10 +12,12 @@ import android.widget.TextView;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageRequest;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.Calendar;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity
@@ -24,6 +29,14 @@ public class MainActivity extends AppCompatActivity
     TextView mTextError;
 
     int mainColor = getResources().getColor(R.color.mainColor);
+
+    // We're bypassing Volley's caching system by retrieving a random image every time
+    // our app is launched. We need a way to show the same image on a particular day.
+    // The simplest way to achieve this is through Android's SharedPreferences.
+    SharedPreferences mSharedPreferences;
+    int today = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
+    final static String SHARED_PREFS_IMG_KEY = "img";
+    final static String SHARED_PREFS_DAY_KEY = "day";
 
     // We can call getInstance outside of onCreate since the singleton will have already
     // been initialized. We don't need to wait for the onStart method to call it.
@@ -47,6 +60,8 @@ public class MainActivity extends AppCompatActivity
         mTextDegrees = (TextView) findViewById(R.id.degrees);
         mTextWeather = (TextView) findViewById(R.id.weather);
         mTextError = (TextView) findViewById(R.id.error);
+
+        mSharedPreferences = getPreferences(Context.MODE_PRIVATE);
 
         try
         {
@@ -92,7 +107,7 @@ public class MainActivity extends AppCompatActivity
                                     "/" + imageItem.getString("id") + "_" +
                                     imageItem.getString("secret") + "_" + "c.jpg";
 
-                            //TODO: Do something with *imageUrl*.
+                            SharedPreferences.Editor editor = mSharedPreferences.edit();
                         }
                         catch (Exception e)
                         {
@@ -111,6 +126,32 @@ public class MainActivity extends AppCompatActivity
         );
 
         request.setPriority(Request.Priority.LOW);
+        helper.add(request);
+    }
+
+    private void loadImage(String imageUrl)
+    {
+        // Retrieves an image specified by the URL and displays it in the UI.
+        ImageRequest request = new ImageRequest(imageUrl,
+                new Response.Listener<Bitmap>()
+                {
+                    @Override
+                    public void onResponse(Bitmap response)
+                    {
+                        mImageView.setImageBitmap(response);
+                    }
+                }, 0, 0, ImageView.ScaleType.CENTER_CROP, Bitmap.Config.ARGB_8888,
+                new Response.ErrorListener()
+                {
+                    public void onErrorResponse(VolleyError error)
+                    {
+                        imageError(error);
+                    }
+                }
+        );
+
+        // We don't need to set the priority here. ImageRequest already comes in with
+        // priority set to LOW and that's what we need.
         helper.add(request);
     }
 
