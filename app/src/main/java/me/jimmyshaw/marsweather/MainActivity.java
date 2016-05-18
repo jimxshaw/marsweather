@@ -3,6 +3,7 @@ package me.jimmyshaw.marsweather;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -28,7 +29,7 @@ public class MainActivity extends AppCompatActivity
     TextView mTextWeather;
     TextView mTextError;
 
-    int mainColor = getResources().getColor(R.color.mainColor);
+    int mainColor = Color.parseColor("#FF5722");
 
     // We're bypassing Volley's caching system by retrieving a random image every time
     // our app is launched. We need a way to show the same image on a particular day.
@@ -63,13 +64,22 @@ public class MainActivity extends AppCompatActivity
 
         mSharedPreferences = getPreferences(Context.MODE_PRIVATE);
 
-        try
+        if (mSharedPreferences.getInt(SHARED_PREFS_DAY_KEY, 0) != today)
         {
-            searchRandomImage();
+            // Search and load a random Mars image.
+            try
+            {
+                searchRandomImage();
+            }
+            catch (Exception e)
+            {
+                imageError(e);
+            }
         }
-        catch (Exception e)
+        else
         {
-            imageError(e);
+            // If we already have an image of the day then we load it.
+            loadImage(mSharedPreferences.getString(SHARED_PREFS_IMG_KEY, ""));
         }
 
         loadWeatherData();
@@ -97,17 +107,26 @@ public class MainActivity extends AppCompatActivity
                             // and the size of the array. It takes the item corresponding to that
                             // index from the array of results and constructs the URL for the image
                             // according to Flickr's guidelines.
-                            JSONArray images = response.getJSONObject("photos").getJSONArray("photos");
+                            JSONArray images = response.getJSONObject("photos").getJSONArray("photo");
                             int index = new Random().nextInt(images.length());
 
                             JSONObject imageItem = images.getJSONObject(index);
 
                             String imageUrl = "http://farm" + imageItem.getString("farm") +
-                                    ".static.flickr.com/" + imageItem.getString("server") +
-                                    "/" + imageItem.getString("id") + "_" +
-                                    imageItem.getString("secret") + "_" + "c.jpg";
+                                    ".static.flickr.com/" + imageItem.getString("server") + "/" +
+                                    imageItem.getString("id") + "_" + imageItem.getString("secret") + "_" + "c.jpg";
 
+                            // We store the current day every time we retrieve a new random image.
+                            // We store the image URL alongside the day. When our app launches, we
+                            // check whether we already have an entry in the SharedPreferences for
+                            // the current day. If there's a match, we use the stored URL. Otherwise
+                            // we retrieve a random image and store its URL in SharedPreferences.
                             SharedPreferences.Editor editor = mSharedPreferences.edit();
+                            editor.putInt(SHARED_PREFS_DAY_KEY, today);
+                            editor.putString(SHARED_PREFS_IMG_KEY, imageUrl);
+                            editor.apply();
+
+                            loadImage(imageUrl);
                         }
                         catch (Exception e)
                         {
@@ -209,6 +228,7 @@ public class MainActivity extends AppCompatActivity
     private void imageError(Exception e)
     {
         mImageView.setBackgroundColor(mainColor);
+        e.printStackTrace();
     }
 
     private void textError(Exception e)
