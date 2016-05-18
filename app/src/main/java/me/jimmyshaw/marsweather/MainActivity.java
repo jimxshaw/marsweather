@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -61,6 +62,10 @@ public class MainActivity extends AppCompatActivity
         mTextDegrees = (TextView) findViewById(R.id.degrees);
         mTextWeather = (TextView) findViewById(R.id.weather);
         mTextError = (TextView) findViewById(R.id.error);
+
+        // Change the default font in our views to something else.
+        mTextDegrees.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/Lato-light.ttf"));
+        mTextWeather.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/Lato-light.ttf"));
 
         mSharedPreferences = getPreferences(Context.MODE_PRIVATE);
 
