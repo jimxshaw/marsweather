@@ -16,6 +16,8 @@ import org.json.JSONObject;
 public class CustomJsonRequest extends JsonObjectRequest
 {
 
+    private Priority mPriority;
+
     public CustomJsonRequest(int method, String url, JSONObject jsonRequest,
                              Response.Listener<JSONObject> listener,
                              Response.ErrorListener errorListener)
@@ -23,16 +25,14 @@ public class CustomJsonRequest extends JsonObjectRequest
         super(method, url, jsonRequest, listener, errorListener);
     }
 
-    private Priority mPriority;
-
-    public void setPriority(Priority priority)
-    {
-        mPriority = priority;
-    }
-
     @Override
     public Priority getPriority()
     {
         return mPriority == null ? Priority.NORMAL : mPriority;
+    }
+
+    public void setPriority(Priority priority)
+    {
+        mPriority = priority;
     }
 }
